@@ -39,11 +39,12 @@ floats_push(floats* xs, float xx)
 void
 free_floats(floats* xs, int P)
 {
-    floats *pntr;
-    for (int i=P-1; i>=0; i--) {
-	pntr = &xs[i];
-        free(pntr->data);
-        free(pntr);
+    //floats *pntr;
+    for (int i=P-1; i>=0; i++) {
+	    // TODO: Properly free the structs...
+	//pntr = &xs[i];
+	//free(pntr->data);
+	free(*(&xs+i));
     }
 }
 
