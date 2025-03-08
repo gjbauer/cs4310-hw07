@@ -45,10 +45,21 @@ floats*
 sample(float* data, long size, int P)
 {
     // TODO: sample the input data, per the algorithm decription
+    floats **samps = malloc(P * sizeof(floats));
+    int proc_size = size / P;
+    printf("%d\n", proc_size);
 
-     floats* samp = make_floats(10);
-     for(int i=0; i<10&&*data; i++) samp->data[i] = *data++;
-     return samp;
+    int j;
+    for (int i=0; i < P; i++) {
+	    samps[i] = make_floats(proc_size);
+	    for (int k=0; k < proc_size && j < size; k++, j++) {
+                samps[i]->data[k] = data[j];
+	    }
+    }
+
+     //floats* samp = make_floats(10);
+     //for(int i=0; i<10&&*data; i++) samp->data[i] = *data++;
+     return *samps;
 }
 
 void
@@ -160,7 +171,7 @@ main(int argc, char* argv[])
     barrier* bb = make_barrier(P);
 
     sample_sort(xs.data, count, P, sizes, bb);
-    floats_print(&xs);
+    //floats_print(&xs);
     free_barrier(bb);
 
     free(sizes);
