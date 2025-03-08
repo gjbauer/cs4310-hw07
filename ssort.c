@@ -15,7 +15,10 @@
 int compare(const void *a, const void *b) {
 	float fa = *(const float*)a;
 	float fb = *(const float*)b;
-	return (fa > fb) - (fa < fb);
+	//printf("a = %f , b = %f\n", fa, fb);
+	if (fa < fb) return -1;
+	if (fa > fb) return 1;
+	return 0;
 }
 
 void
@@ -23,9 +26,18 @@ qsort_floats(floats* xs)
 {
     // calls qsort to sort the array
     // see "man 3 qsort" for details
-    //int n;
-    //for(n=0; xs->data[n]; n++);
-    qsort(xs->data, xs->size, sizeof(float), compare);
+    float dat[xs->size-1];
+    for(int i=0; i<xs->size; i++) dat[i]=xs->data[i];
+    //printf("i = %d\n", i);
+    //printf("xs->size = %ld\n", xs->size);
+    qsort(dat, xs->size, sizeof(float), compare);
+    /*for(int i=0; dat[i]; i++)
+    	printf("dat: %.4f\n", dat[i]);*/
+    free(xs->data);
+    xs->data=malloc(xs->size*sizeof(float));
+    for(int i=0; i<xs->size; i++) xs->data[i]=dat[i];
+    /*for(int i=0; xs->data[i]; i++)
+    	printf("data: %.4f\n", xs->data[i]);*/
     return;
 }
 
@@ -44,14 +56,15 @@ sort_worker(int pnum, float* data, long size, int P, floats* samps, long* sizes,
 {
     floats* xs = make_floats(10);
     // TODO: select the floats to be sorted by this worker
-    for(int i=0; i<10&&*data; i++) xs->data[i] = *data++;
+    for(int i=0; i<10&&*data; i++) xs->data[i] = data[i];
 
-    printf("%d: start %.04f, count %ld\n", pnum, samps->data[pnum], xs->size);
+    //printf("%d: start %.04f, count %ld\n", pnum, samps->data[pnum], xs->size);
 
     // TODO: some other stuff
 
     qsort_floats(xs);
-
+    for (int i=0; i<xs->size; i++) data[i]=xs->data[i];
+    printf("%d: start %.04f, count %ld\n", pnum, data[pnum], xs->size);
     // TODO: probably more stuff
 
     free_floats(xs);
@@ -64,6 +77,8 @@ run_sort_workers(float* data, long size, int P, floats* samps, long* sizes, barr
     (void) kids; // suppress unused warning
 
     sort_worker(0, data, size, P, samps, sizes, bb);
+    /*for(int i=0; data[i]; i++)
+    	printf("%.4f\n", data[i]);*/
     // TODO: spawn P processes, each running sort_worker
     for (int i=0; i<P; i++) {
 	    // TODO: Create processes...
@@ -79,7 +94,7 @@ void
 sample_sort(float* data, long size, int P, long* sizes, barrier* bb)
 {
     floats* samps = sample(data, size, P);
-    run_sort_workers(samps->data, size, P, samps, sizes, bb);
+    run_sort_workers(data, size, P, samps, sizes, bb);
     free_floats(samps);
 }
 
@@ -138,8 +153,6 @@ main(int argc, char* argv[])
 	    xs.data[k++]=z;
     }
     xs.size=k;
-    /*for(int i=0; xs.data[i]; i++)
-    	printf("%.4f\n", xs.data[i]);*/
 
     long sizes_bytes = P * sizeof(long);
     long* sizes = malloc(sizes_bytes); // TODO: This should be shared
@@ -147,7 +160,7 @@ main(int argc, char* argv[])
     barrier* bb = make_barrier(P);
 
     sample_sort(xs.data, count, P, sizes, bb);
-    //floats_print(&xs);
+    floats_print(&xs);
     free_barrier(bb);
 
     free(sizes);
