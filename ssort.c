@@ -72,6 +72,7 @@ sort_worker(int pnum, float* data, long size, int P, floats* samps, long* sizes,
 {
     floats* xs = make_floats(10);
     // TODO: select the floats to be sorted by this worker
+    barrier_wait(bb);
     for(int i=0; i<10&&*data; i++) xs->data[i] = data[i];
 
     //printf("%d: start %.04f, count %ld\n", pnum, samps->data[pnum], xs->size);
@@ -109,7 +110,7 @@ run_sort_workers(float* data, long size, int P, floats* samps, long* sizes, barr
                 perror("fork fail\n");
 	    }
 	    if (kids[i]==0) {
-		    sort_worker(i, data, size, P, samps, sizes, bb);
+		sort_worker(i, data, size, P, samps, sizes, bb);
 	    }
     }
 
