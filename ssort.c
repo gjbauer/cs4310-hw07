@@ -98,17 +98,24 @@ run_sort_workers(float* data, long size, int P, floats* samps, long* sizes, barr
     pid_t kids[P];
     (void) kids; // suppress unused warning
 
-    sort_worker(0, data, size, P, samps, sizes, bb);
+    //sort_worker(0, data, size, P, samps, sizes, bb);
     /*for(int i=0; data[i]; i++)
     	printf("%.4f\n", data[i]);*/
     // TODO: spawn P processes, each running sort_worker
     for (int i=0; i<P; i++) {
 	    // TODO: Create processes...
+	    kids[i] = fork();
+	    if (kids[i] < 0) {
+                perror("fork fail\n");
+	    }
+	    if (kids[i]==0) {
+		    sort_worker(i, data, size, P, samps, sizes, bb);
+	    }
     }
 
     for (int ii = 0; ii < P; ++ii) {
-        //int rv = waitpid(kids[ii], 0, 0);
-        //check_rv(rv);
+        int rv = waitpid(kids[ii], 0, 0);
+        check_rv(rv);
     }
 }
 
