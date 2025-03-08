@@ -26,8 +26,11 @@ qsort_floats(floats* xs)
 {
     // calls qsort to sort the array
     // see "man 3 qsort" for details
-    float dat[xs->size-1];
-    for(int i=0; i<xs->size; i++) dat[i]=xs->data[i];
+    int i;
+    for(i=0; xs->data[i]!=0; i++);
+    xs->size=i;
+    float dat[xs->size];
+    for(int i=0; xs->data[i]!=0; i++) dat[i]=xs->data[i];
     //printf("i = %d\n", i);
     //printf("xs->size = %ld\n", xs->size);
     qsort(dat, xs->size, sizeof(float), compare);
@@ -45,9 +48,11 @@ floats*
 sample(float* data, long size, int P)
 {
     // TODO: sample the input data, per the algorithm decription
-    floats **samps = malloc(P * sizeof(floats));
     int proc_size = size / P;
-    printf("%d\n", proc_size);
+    floats **samps = malloc(P * sizeof(floats));
+    for(int i=0; i<P; i++)
+	    samps[i] = make_floats(proc_size);
+    //printf("%d\n", proc_size);
 
     int j;
     for (int i=0; i < P; i++) {
@@ -72,13 +77,19 @@ sort_worker(int pnum, float* data, long size, int P, floats* samps, long* sizes,
     //printf("%d: start %.04f, count %ld\n", pnum, samps->data[pnum], xs->size);
 
     // TODO: some other stuff
+    floats *pntr = (floats*)(&samps+pnum);
+    //int mul = &samps[pnum];
+    //printf("samps = %p\n", (void*)(char*)samps);
+    //printf("pnum = %d\n", pnum);
+    //printf("samps+pnum = %p\n", &samps[pnum]);
+    //printf("sizeof(floats) = %ld\n", sizeof(floats));
 
-    qsort_floats(xs);
-    for (int i=0; i<xs->size; i++) data[i]=xs->data[i];
+    qsort_floats(pntr);
+    for (int i=0; i<pntr->size; i++) data[i]=pntr->data[i];
     printf("%d: start %.04f, count %ld\n", pnum, data[pnum], xs->size);
     // TODO: probably more stuff
 
-    free_floats(xs);
+    free_floats(xs, P);
 }
 
 void
@@ -106,7 +117,7 @@ sample_sort(float* data, long size, int P, long* sizes, barrier* bb)
 {
     floats* samps = sample(data, size, P);
     run_sort_workers(data, size, P, samps, sizes, bb);
-    free_floats(samps);
+    free_floats(samps, P);
 }
 
 int
@@ -171,9 +182,13 @@ main(int argc, char* argv[])
     barrier* bb = make_barrier(P);
 
     sample_sort(xs.data, count, P, sizes, bb);
-    //floats_print(&xs);
+    floats_print(&xs, P);
     free_barrier(bb);
 
+    //for (int i=P-1; i>=0; i--)
+//	    free(&xs[i]);
+
+    //free_floats(P);
     free(sizes);
     free(file);
     free(data);

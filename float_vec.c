@@ -37,19 +37,27 @@ floats_push(floats* xs, float xx)
 }
 
 void
-free_floats(floats* xs)
+free_floats(floats* xs, int P)
 {
-    free(xs->data);
-    free(xs);
+    floats *pntr;
+    for (int i=P-1; i>=0; i--) {
+	pntr = &xs[i];
+        free(pntr->data);
+        free(pntr);
+    }
 }
 
 void
-floats_print(floats* xs)
+floats_print(floats* xs, int P)
 {
-    for (int ii = 0; ii < xs->size; ++ii) {
-        printf("%.04f\n", xs->data[ii]);
+    floats *pntr;
+    for (int i=0; i<P; i++) {
+	pntr = &xs[i];
+        for (int ii = 0; ii < pntr->size; ++ii) {
+            printf("%.04f\n", pntr->data[ii]);
+        }
+        printf("\n");
     }
-    printf("\n");
 }
 
 

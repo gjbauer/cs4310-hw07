@@ -12,7 +12,7 @@ typedef struct floats {
 
 floats* make_floats(long nn);
 void floats_push(floats* xs, float xx);
-void free_floats(floats* xs);
-void floats_print(floats* xs);
+void free_floats(floats* xs, int P);
+void floats_print(floats* xs, int P);
 
 #endif
