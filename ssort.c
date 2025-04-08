@@ -7,15 +7,16 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <math.h>
-
+//#include <pthread.h>
 #include "float_vec.h"
 #include "barrier.h"
 #include "utils.h"
 
+//static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
 int compare(const void *a, const void *b) {
 	float fa = *(const float*)a;
 	float fb = *(const float*)b;
-	//printf("a = %f , b = %f\n", fa, fb);
 	if (fa < fb) return -1;
 	if (fa > fb) return 1;
 	return 0;
@@ -26,41 +27,20 @@ qsort_floats(floats* xs)
 {
     // calls qsort to sort the array
     // see "man 3 qsort" for details
-    //int i;
-    //for(i=0; xs->data[i]!=0; i++);
-    //xs->size=i;
-    //printf("%ld\n", xs->size);
     float *dat=malloc(xs->size*sizeof(float));
     for(int i=0; i<xs->size; i++) dat[i]=xs->data[i];
-    //printf("i = %d\n", i);
-    //printf("xs->size = %ld\n", xs->size);
     qsort(dat, xs->size, sizeof(float), compare);
-    /*for(int i=0; dat[i]; i++)
-    	printf("dat: %.4f\n", dat[i]);*/
     free(xs->data);
     xs->data=malloc(xs->size*sizeof(float));
     for(int i=0; i<xs->size-1; i++) xs->data[i]=dat[i];
     free(dat);
-    /*for(int i=0; xs->data[i]; i++)
-    	printf("data: %.4f\n", xs->data[i]);*/
     return;
 }
 
-floats**
+floats*
 sample(float* data, long size, int P)
 {
     // TODO: sample the input data, per the algorithm decription
-    /*int R = size;
-    floats **samps = malloc(P * sizeof(floats*));
-    for(int i=0; i<P; i++) {
-	    if((3*i)-1<size) {
-		    samps[i] = make_floats((3*i)-1);
-		    R -= (3*i)-1;
-	    } else {
-		    samps[i] = make_floats(R); 
-	    }
-    }*/
-    //printf("proc_size = %d\n", proc_size);
     int proc_size = size / P;
     floats **samps = malloc(P * sizeof(floats*));
 
@@ -68,63 +48,40 @@ sample(float* data, long size, int P)
     for (int i=0; i < P; i++) {
 	    samps[i] = make_floats(proc_size);
 	    for (int k=0; k < samps[i]->size && j < size; k++, j++) {
-		//printf("i = %d, data = %f\n", i, data[j]);
                 samps[i]->data[k] = data[j];
 	    }
     }
 
-     //floats* samp = make_floats(10);
-     //for(int i=0; i<10&&*data; i++) samp->data[i] = *data++;
-     return samps;
+     return *samps;
 }
 
 void
-sort_worker(int pnum, float* data, long size, int P, floats** samps, long* sizes, barrier* bb)
+sort_worker(int pnum, float* data, long size, int P, floats* samps, long* sizes, barrier* bb)
 {
-    //floats* xs = make_floats(10);
-    // TODO: select the floats to be sorted by this worker
-    //barrier_wait(bb);
-    //for(int i=0; i<10&&*data; i++) xs->data[i] = data[i];
 
-    //printf("%d: start %.04f, count %ld\n", pnum, samps->data[pnum], xs->size);
-
-    // TODO: some other stuff
-    //floats *pntr = samps[pnum];
-    //int mul = &samps[pnum];
-    //printf("samps = %p\n", (void*)(char*)samps);
-    //printf("pnum = %d\n", pnum);
-    //printf("samps+pnum = %p\n", &samps[pnum]);
-    //printf("sizeof(floats) = %ld\n", sizeof(floats));
-
-    qsort_floats(samps[pnum]);
-    for (int i=0; i<samps[pnum]->size; i++) data[i]=samps[pnum]->data[i];
-    printf("%d: start %.04f, count %ld\n", pnum, data[pnum], samps[pnum]->size);
-    // TODO: probably more stuff
-
-    //free_floats(xs, P);
+    qsort_floats(&samps[pnum]);
+    //pthread_mutex_lock(&lock);
+    for (int i=0; i<samps[pnum].size; i++) data[i]=samps[pnum].data[i];
+    //pthread_mutex_unlock(&lock);
+    printf("%d: start %.04f, count %ld\n", pnum, data[pnum], samps[pnum].size);
+    
     exit(0);
 }
 
 void
-run_sort_workers(float* data, long size, int P, floats** samps, long* sizes, barrier* bb)
+run_sort_workers(float* data, long size, int P, floats* samps, long* sizes, barrier* bb)
 {
     pid_t kids[P];
     (void) kids; // suppress unused warning
     int stat;
     sizes = malloc(P*sizeof(long));
 
-    //sort_worker(0, data, size, P, samps, sizes, bb);
-    /*for(int i=0; data[i]; i++)
-    	printf("%.4f\n", data[i]);*/
-    // TODO: spawn P processes, each running sort_worker
     for (int i=0; i<P; i++) {
-	    // TODO: Create processes...
 	    kids[i] = fork();
 	    if (kids[i] < 0) {
                 perror("fork fail\n");
 	    }
 	    if (kids[i]==0) {
-		
 		sort_worker(i, data, size, P, samps, sizes, bb);
 	    }
 	    else {
@@ -132,18 +89,12 @@ run_sort_workers(float* data, long size, int P, floats** samps, long* sizes, bar
 		check_rv(rv);
 	    }
     }
-
-    /*for (int ii = 0; ii < P; ++ii) {
-        int rv = waitpid(kids[ii], &stat, 0);
-        check_rv(rv);
-	//sigwait(&signal_set, &sig);
-    }*/
 }
 
 void
 sample_sort(float* data, long size, int P, long* sizes, barrier* bb)
 {
-    floats** samps = sample(data, size, P);
+    floats* samps = sample(data, size, P);
     run_sort_workers(data, size, P, samps, sizes, bb);
     free_floats(samps, P);
 }
@@ -151,15 +102,6 @@ sample_sort(float* data, long size, int P, long* sizes, barrier* bb)
 int
 main(int argc, char* argv[])
 {
-/*	int arr[8] = {6, 93, 45, 124, 5, 807, 30, 404};
-	int n;
-    for(n=0; arr[n]; n++);
-    qsort(arr, n, sizeof(int), compare);
-
-    for (int i = 0; arr[i]; i++) {
-	    printf("arr[%d] = %d\n", i, arr[i]);
-    }*/
-
     alarm(120); // leave this here
 
     if (argc != 3) {
@@ -196,7 +138,6 @@ main(int argc, char* argv[])
     float* data = malloc(16*1024);
     xs.data = data;
 
-    //printf("count = %ld\n", count);
     int x, k=0;
     float z;
     while ((x = read(fd, &z, sizeof(float)))) {
@@ -212,9 +153,6 @@ main(int argc, char* argv[])
     sample_sort(xs.data, count, P, sizes, bb);
     floats_print(&xs, P);
     free_barrier(bb);
-
-    //for (int i=P-1; i>=0; i--)
-//	    free(&xs[i]);
 
     //free_floats(P);
     free(sizes);
