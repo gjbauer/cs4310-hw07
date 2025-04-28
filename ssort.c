@@ -51,11 +51,15 @@ run_sort_workers(float* data, long size, int P, floats* samps, long* sizes, barr
     (void) kids; // suppress unused warning
 
     // TODO: spawn P processes, each running sort_worker
-
     for (int ii = 0; ii < P; ++ii) {
+        kids[ii] = fork();
+        sort_worker(ii, data, size, P, samps, sizes, bb);
+    }
+
+    /*for (int ii = 0; ii < P; ++ii) {
         //int rv = waitpid(kids[ii], 0, 0);
         //check_rv(rv);
-    }
+    }*/
 }
 
 void
@@ -103,8 +107,8 @@ main(int argc, char* argv[])
     long count = 100;
     float* data = malloc(1024);
 
-    printf("...", count);
-    printf("...", data[0]);
+    //printf("...", count);
+    //printf("...", data[0]);
 
     long sizes_bytes = P * sizeof(long);
     long* sizes = malloc(sizes_bytes); // TODO: This should be shared
