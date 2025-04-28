@@ -34,14 +34,18 @@ sample(float* data, long size, int P)
     // TODO: sample the input data, per the algorithm decription
     int samp[size];
     for (int i=0; i<size; i++) samp[i] = rand() % (size + 1);
-    floats xs = make_floats(size); // TODO: Implement random samples...
-    for (int i=0; i<size; i++) xs->data[i] = data[samps[i]];
+    floats* xs = make_floats(size); // TODO: Implement random samples...
+    for (int i=0; i<size; i++) xs->data[i] = data[samp[i]];
+    return xs;
 }
 
 void
 sort_worker(int pnum, float* data, long size, int P, floats* samps, long* sizes, barrier* bb)
 {
-    floats* xs = make_floats(10);
+    floats* xs = make_floats(3*pnum);
+    int pos = 0;
+    
+    for(int i=pnum; i>0; i++) pos+=3*i;
     // TODO: select the floats to be sorted by this worker
 
     printf("%d: start %.04f, count %ld\n", pnum, samps->data[pnum], xs->size);
@@ -63,6 +67,7 @@ run_sort_workers(float* data, long size, int P, floats* samps, long* sizes, barr
 
     // TODO: spawn P processes, each running sort_worker
     for (int ii = 0; ii < P; ++ii) {
+    	sizes[ii] = 3*ii;
         kids[ii] = fork();
         sort_worker(ii, data, size, P, samps, sizes, bb);
     }
@@ -108,14 +113,18 @@ main(int argc, char* argv[])
         return 1;
     }
 
-    int fd = open(fname, O_RDWR);
-    check_rv(fd);
+    int  fd;
+    long count = 0;
+    FILE* data = fopen(fname, "r");
+    assert(data != NULL);
+    fd = fread(&count, sizeof(long), 1, data);
+    assert(fd == 1);
 
     void* file = malloc(1024); // TODO: load the file with mmap.
     (void) file; // suppress unused warning.
 
     // TODO: These should probably be from the input file.
-    long count = 100;
+    
     float* data = malloc(1024);
 
     //printf("...", count);
