@@ -83,9 +83,7 @@ void
 sample_sort(float* data, long size, int P, long* sizes, barrier* bb)
 {
     floats* samps = sample(data, size, P);
-    floats_print(samps);
     run_sort_workers(data, size, P, samps, sizes, bb);
-    floats_print(samps);
     free_floats(samps);
 }
 
@@ -123,12 +121,12 @@ main(int argc, char* argv[])
     (void) file; // suppress unused warning.
     assert (file != MAP_FAILED);
 
-    long count = st.st_size/8;
+    long count = st.st_size/sizeof(float);
     float* data = (float*)file;
     
-    /*for (int ii = 0; ii < count; ++ii) {
+    for (int ii = 2; ii < count; ++ii) {
         printf("%.04f ", data[ii]);
-    }*/
+    }
 
     //printf("...", count);
     //printf("...", data[0]);
