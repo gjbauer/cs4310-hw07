@@ -33,8 +33,9 @@ sample(float* data, long size, int P)
 {
     // TODO: sample the input data, per the algorithm decription
     int samp[size];
-    for (int i=0; i<size; i++);
-    return make_floats(size); // TODO: Implement random samples...
+    for (int i=0; i<size; i++) samp[i] = rand() % (size + 1);
+    floats xs = make_floats(size); // TODO: Implement random samples...
+    for (int i=0; i<size; i++) xs->data[i] = data[samps[i]];
 }
 
 void
