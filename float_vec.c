@@ -47,7 +47,7 @@ void
 floats_print(floats* xs)
 {
     for (int ii = 0; ii < xs->size; ++ii) {
-        printf("%.04f ", xs->data[ii]);
+        printf("%.04f\n", xs->data[ii]);
     }
     printf("\n");
 }
