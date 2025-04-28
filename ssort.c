@@ -125,7 +125,7 @@ main(int argc, char* argv[])
 
     // TODO: These should probably be from the input file.
     
-    float* data = malloc(1024);
+    float* data = (float*)file;
 
     //printf("...", count);
     //printf("...", data[0]);
