@@ -12,11 +12,20 @@
 #include "barrier.h"
 #include "utils.h"
 
+int compare(const void *a, const void *b) {
+	float fa = *(const float*)a;
+	float fb = *(const float*)b;
+	if (fa < fb) return -1;
+	if (fa > fb) return 1;
+	return 0;
+}
+
 void
 qsort_floats(floats* xs)
 {
     // TODO: call qsort to sort the array
     // see "man 3 qsort" for details
+    qsort(xs->data, xs->size, sizeof(float), compare);
 }
 
 floats*
@@ -24,6 +33,7 @@ sample(float* data, long size, int P)
 {
     // TODO: sample the input data, per the algorithm decription
     int samp[size];
+    for (int i=0; i<size; i++);
     return make_floats(size); // TODO: Implement random samples...
 }
 
