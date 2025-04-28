@@ -8,10 +8,9 @@
 #include <fcntl.h>
 #include <math.h>
 #include <assert.h>
+#include <pthread.h>
 
-#include "float_vec.h"
-#include "barrier.h"
-#include "utils.h"
+#include "ssort.h"
 
 int compare(const void *a, const void *b) {
 	float fa = *(const float*)a;
@@ -40,16 +39,17 @@ sample(float* data, long size, int P)
     return xs;
 }
 
-void
-sort_worker(int pnum, float* data, long size, int P, floats* samps, long* sizes, barrier* bb)
+void*
+sort_worker(void* arg)
 {
-    floats* xs = make_floats(3*pnum);
+    struct sort_args *sa = (struct sort_args*)arg;
+    floats* xs = make_floats(3*sa->pnum);
     int pos = 0;
     
-    for(int i=pnum; i>0; i++) pos+=3*i;
+    for(int i=sa->pnum; i>0; i++) pos+=3*i;
     // TODO: select the floats to be sorted by this worker
 
-    printf("%d: start %.04f, count %ld\n", pnum, samps->data[pnum], xs->size);
+    printf("%d: start %.04f, count %ld\n", sa->pnum, sa->samps->data[pos], xs->size);
 
     // TODO: some other stuff
 
@@ -58,19 +58,27 @@ sort_worker(int pnum, float* data, long size, int P, floats* samps, long* sizes,
     // TODO: probably more stuff
 
     free_floats(xs);
+    return 0;
 }
 
 void
 run_sort_workers(float* data, long size, int P, floats* samps, long* sizes, barrier* bb)
 {
-    pid_t kids[P];
+    pthread_t kids[P];
     (void) kids; // suppress unused warning
 
     // TODO: spawn P processes, each running sort_worker
     for (int ii = 0; ii < P; ++ii) {
+        struct sort_args sa;
+        sa.pnum=ii;
+        sa.data=data;
+        sa.size=size;
+        sa.P=P;
+        sa.samps=samps;
+        sa.sizes=sizes;
+        sa.bb=bb;
     	sizes[ii] = 3*ii;
-        kids[ii] = fork();
-        sort_worker(ii, data, size, P, samps, sizes, bb);
+        pthread_create(&kids[ii], NULL, &sort_worker, (void *)&sa);
     }
 
     /*for (int ii = 0; ii < P; ++ii) {
