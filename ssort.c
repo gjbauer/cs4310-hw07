@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <math.h>
+#include <assert.h>
 
 #include "float_vec.h"
 #include "barrier.h"
@@ -82,7 +83,9 @@ void
 sample_sort(float* data, long size, int P, long* sizes, barrier* bb)
 {
     floats* samps = sample(data, size, P);
+    floats_print(samps);
     run_sort_workers(data, size, P, samps, sizes, bb);
+    floats_print(samps);
     free_floats(samps);
 }
 
@@ -113,25 +116,25 @@ main(int argc, char* argv[])
         return 1;
     }
 
-    int  fd;
-    long count = 0;
-    FILE* data = fopen(fname, "r");
-    assert(data != NULL);
-    fd = fread(&count, sizeof(long), 1, data);
-    assert(fd == 1);
+    int fd = open(fname, O_RDWR);
+    check_rv(fd);
 
-    void* file = malloc(1024); // TODO: load the file with mmap.
+    void* file = mmap(NULL, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     (void) file; // suppress unused warning.
+    assert (file != MAP_FAILED);
 
-    // TODO: These should probably be from the input file.
-    
+    long count = st.st_size/8;
     float* data = (float*)file;
+    
+    /*for (int ii = 0; ii < count; ++ii) {
+        printf("%.04f ", data[ii]);
+    }*/
 
     //printf("...", count);
     //printf("...", data[0]);
 
     long sizes_bytes = P * sizeof(long);
-    long* sizes = malloc(sizes_bytes); // TODO: This should be shared
+    long* sizes = mmap(NULL, sizes_bytes, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, 0, 0);
 
     barrier* bb = make_barrier(P);
 
@@ -139,7 +142,7 @@ main(int argc, char* argv[])
 
     free_barrier(bb);
 
-    // TODO: munmap your mmaps
+    munmap(file, st.st_size);
 
     return 0;
 }
