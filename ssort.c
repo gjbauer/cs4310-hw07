@@ -49,6 +49,10 @@ sample(float* data, long size, int P)
      for(int i=0; i<(3*(P-1)); i++) {
      	printf("%.04f\n", samp[i]);
      }
+     printf("find medians\n");
+     for(int i=0; i<(3*(P-1)); i+=3) {
+     	printf("%.04f\n", ((samp[i]+samp[i+1]+samp[i+2])/3));
+     }
     return NULL;
 }
 
