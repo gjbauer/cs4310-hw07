@@ -31,15 +31,20 @@ floats*
 sample(float* data, long size, int P)
 {
     // TODO: sample the input data, per the algorithm decription
-    int samp[size];
+    //int samp[size];
     /*
      * Randomly select 3*(P-1) items from the array.
      * Sort those items.
      * Take the median of each group of three in the sorted array, producing an array (samples) of (P-1) items.
      * Add 0 at the start and +inf at the end (or the min and max values of the type being sorted) of the samples array so it has (P+1) items numbered (0 to P).
      */
-     // arc4random_uniform(size + 1);
-    return xs;
+     int j;
+     for(int i=0; i<(3*(P-1)); i++) {
+        j = arc4random_uniform(size);
+     	printf("%d\n", j);
+     	printf("%.04f\n", data[j]);
+     }
+    return NULL;
 }
 
 void*
@@ -52,7 +57,7 @@ sort_worker(void* arg)
     
     // TODO: select the floats to be sorted by this worker
 
-    printf("%d: start %.04f, count %ld\n", sa->pnum, sa->samps->data[pos], xs->size);
+    //printf("%d: start %.04f, count %ld\n", sa->pnum, sa->samps->data[pos], xs->size);
 
     // TODO: some other stuff
 
@@ -95,7 +100,7 @@ sample_sort(float* data, long size, int P, long* sizes, barrier* bb)
 {
     floats* samps = sample(data, size, P);
     run_sort_workers(data, size, P, samps, sizes, bb);
-    free_floats(samps);
+    //free_floats(samps);
 }
 
 int
@@ -136,7 +141,7 @@ main(int argc, char* argv[])
     float* data = (float*)file;
     
     for (int ii = 2; ii < count; ++ii) {
-        printf("%.04f ", data[ii]);
+        printf("%.04f\n", data[ii]);
     }
 
     long sizes_bytes = P * sizeof(long);
