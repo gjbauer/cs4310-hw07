@@ -43,7 +43,7 @@ sample(float* data, long size, int P)
     int j;
     for(int i=0; i<(3*(P-1)); i++) {
        j = arc4random_uniform(size-2);
-       printf("data[%d] = %.04f\n", j, data[j]);
+       //printf("data[%d] = %.04f\n", j, data[j]);
        samp[i]=data[j];
     }
     qsort(samp, (3*(P-1)), sizeof(float), compare);
@@ -55,7 +55,7 @@ sample(float* data, long size, int P)
     xs->data[0]=0;
     for(int i=0; i<(3*(P-1)); i+=3) {
     	xs->data[(i/3)+1]=((samp[i]+samp[i+1]+samp[i+2])/3);
-        printf("%.04f\n", ((samp[i]+samp[i+1]+samp[i+2])/3));
+        //printf("%.04f\n", ((samp[i]+samp[i+1]+samp[i+2])/3));
     }
     xs->data[P]=FLT_MAX;
     return xs;
