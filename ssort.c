@@ -66,15 +66,27 @@ sort_worker(void* arg)
 {
     struct sort_args *sa = (struct sort_args*)arg;
     // scanning the full input and taking items between samples[p] and samples[p+1]. << COUNT FIRST
-    //floats* xs = make_floats();	<- put number here...
-    
-    // Each process uses quicksort to sort the local array.
+    float base = sa->samps->data[pnum];
+    float top = sa->samps->data[pnum + 1];
+    int s=0;
+    for(int i=0; sa->data[i]; i++) {
+    	if (sa->data[i]>=base && sa->data[i]<=top) s++;
+    }
+    floats* xs = make_floats(s);	<- put number here...
+    for(int i=0; sa->data[i]; i++) {
+    	if (sa->data[i]>=base && sa->data[i]<=top) {
+    		xs->data[s] = sa->data[i];
+    		s++;
+    	}
+    }
     
     // TODO: select the floats to be sorted by this worker
 
     //printf("%d: start %.04f, count %ld\n", sa->pnum, sa->samps->data[sa->pnum], xs->size);
 
     // TODO: some other stuff
+    
+    // Each process uses quicksort to sort the local array.
 
     qsort_floats(xs);
 
