@@ -112,18 +112,18 @@ run_sort_workers(float* data, long size, int P, floats* samps, long* sizes, barr
      * Each process builds a local array of items to be sorted by scanning the full input and taking items between samples[p] and samples[p+1].
      * Write the number of items (n) taken to a shared array sizes at slot p.
      */
+    struct sort_args sa[P];
      
     for (int ii = 0; ii < P; ++ii) {
-        struct sort_args sa;
-        sa.pnum=ii;
-        sa.data=data;
-        sa.size=size;
-        sa.P=P;
-        sa.samps=samps;
-        sa.sizes=sizes;
-        sa.bb=bb;
+        sa[ii].pnum=ii;
+        sa[ii].data=data;
+        sa[ii].size=size;
+        sa[ii].P=P;
+        sa[ii].samps=samps;
+        sa[ii].sizes=sizes;
+        sa[ii].bb=bb;
         int rv;
-        rv = pthread_create(&kids[ii], NULL, &sort_worker, (void *)&sa);
+        rv = pthread_create(&kids[ii], NULL, &sort_worker, (void *)&sa[ii]);
         if (rv) {
             printf("Error:unable to create thread, %d\n", rv);
             exit(1);
