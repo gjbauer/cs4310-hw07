@@ -13,6 +13,8 @@
 
 #include "ssort.h"
 
+static pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
 int compare(const void *a, const void *b) {
 	float fa = *(const float*)a;
 	float fb = *(const float*)b;
@@ -26,6 +28,7 @@ qsort_floats(floats* xs)
 {
     // TODO: call qsort to sort the array
     // see "man 3 qsort" for details
+    qsort(xs->data, xs->size, sizeof(float), compare);
 }
 
 floats*
@@ -65,24 +68,22 @@ void*
 sort_worker(void* arg)
 {
     struct sort_args *sa = (struct sort_args*)arg;
-    // scanning the full input and taking items between samples[p] and samples[p+1]. << COUNT FIRST
-    float base = sa->samps->data[pnum];
-    float top = sa->samps->data[pnum + 1];
+    float base = sa->samps->data[sa->pnum];
+    float top = sa->samps->data[sa->pnum + 1];
     int s=0;
     for(int i=0; sa->data[i]; i++) {
     	if (sa->data[i]>=base && sa->data[i]<=top) s++;
     }
-    floats* xs = make_floats(s);	<- put number here...
+    sa->sizes[sa->pnum]=s;
+    floats* xs = make_floats(s);
     for(int i=0; sa->data[i]; i++) {
     	if (sa->data[i]>=base && sa->data[i]<=top) {
     		xs->data[s] = sa->data[i];
     		s++;
     	}
     }
-    
-    // TODO: select the floats to be sorted by this worker
 
-    //printf("%d: start %.04f, count %ld\n", sa->pnum, sa->samps->data[sa->pnum], xs->size);
+    printf("%d: start %.04f, count %ld\n", sa->pnum, sa->samps->data[sa->pnum], xs->size);
 
     // TODO: some other stuff
     
@@ -98,7 +99,12 @@ sort_worker(void* arg)
      * Warning: Data race if you don’t synchronize here.
      * Each process copies its sorted array to input[start..end]
      */
-
+     pthread_mutex_lock(&lock);
+     int pos=0;
+     for(int i=0; i<sa->pnum; i++) pos+=sa->sizes[sa->pnum-1];
+     
+     for(int i=0; i<xs->size; i++, pos++) sa->data[pos] = xs->data[i]; 
+	pthread_mutex_unlock(&lock);
     free_floats(xs);
     return 0;
 }
@@ -115,6 +121,32 @@ run_sort_workers(float* data, long size, int P, floats* samps, long* sizes, barr
      * Each process builds a local array of items to be sorted by scanning the full input and taking items between samples[p] and samples[p+1].
      * Write the number of items (n) taken to a shared array sizes at slot p.
      */
+     
+    for (int ii = 0; ii < P; ++ii) {
+        struct sort_args sa;
+        sa.pnum=ii;
+        sa.data=data;
+        sa.size=size;
+        sa.P=P;
+        sa.samps=samps;
+        sa.sizes=sizes;
+        sa.bb=bb;
+        int rv;
+        rv = pthread_create(&kids[ii], NULL, &sort_worker, (void *)&sa);
+        if (rv) {
+            printf("Error:unable to create thread, %d\n", rv);
+            exit(1);
+        }
+    }
+    
+    for (int ii = 0; ii < P; ++ii) {
+        int rv;
+        rv = pthread_join(kids[ii], NULL);
+        if (rv) {
+                printf("Error:unable to join thread %d, %d\n", ii, rv);
+                exit(1);
+        }
+    }
 
     /*for (int ii = 0; ii < P; ++ii) {
         //int rv = waitpid(kids[ii], 0, 0);
@@ -166,10 +198,6 @@ main(int argc, char* argv[])
 
     long count = st.st_size/sizeof(float);
     float* data = (float*)file;
-    
-    for (int ii = 2; ii < count; ++ii) {
-        printf("%.04f\n", data[ii]);
-    }
 
     long sizes_bytes = P * sizeof(long);
     long* sizes = mmap(NULL, sizes_bytes, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, 0, 0);
@@ -177,6 +205,10 @@ main(int argc, char* argv[])
     barrier* bb = make_barrier(P);
 
     sample_sort(data, count, P, sizes, bb);
+    
+    /*for (int ii = 2; ii < count; ++ii) {
+        printf("%.04f\n", data[ii]);
+    }*/
 
     free_barrier(bb);
 
