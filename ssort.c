@@ -9,6 +9,7 @@
 #include <math.h>
 #include <assert.h>
 #include <pthread.h>
+#include <float.h>
 
 #include "ssort.h"
 
@@ -50,9 +51,12 @@ sample(float* data, long size, int P)
      	printf("%.04f\n", samp[i]);
      }
      printf("find medians\n");
+     float fin[P+1];
+     fin[0]=0;
      for(int i=0; i<(3*(P-1)); i+=3) {
      	printf("%.04f\n", ((samp[i]+samp[i+1]+samp[i+2])/3));
      }
+     fin[P]=FLT_MAX;
     return NULL;
 }
 
