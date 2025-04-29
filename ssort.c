@@ -33,31 +33,32 @@ sample(float* data, long size, int P)
 {
     // TODO: sample the input data, per the algorithm decription
     float samp[(3*(P-1))];
-    data = data + 2;
+    data = data + 2;	// Move our pointer, because it appears to be off...
     /*
      * Randomly select 3*(P-1) items from the array.
      * Sort those items.
      * Take the median of each group of three in the sorted array, producing an array (samples) of (P-1) items.
      * Add 0 at the start and +inf at the end (or the min and max values of the type being sorted) of the samples array so it has (P+1) items numbered (0 to P).
      */
-     int j;
-     for(int i=0; i<(3*(P-1)); i++) {
-        j = arc4random_uniform(size-2);
-     	printf("data[%d] = %.04f\n", j, data[j]);
-     	samp[i]=data[j];
-     }
-     qsort(samp, (3*(P-1)), sizeof(float), compare);
-     for(int i=0; i<(3*(P-1)); i++) {
-     	printf("%.04f\n", samp[i]);
-     }
-     printf("find medians\n");
-     float fin[P+1];
-     fin[0]=0;
-     for(int i=0; i<(3*(P-1)); i+=3) {
-     	printf("%.04f\n", ((samp[i]+samp[i+1]+samp[i+2])/3));
-     }
-     fin[P]=FLT_MAX;
-    return NULL;
+    int j;
+    for(int i=0; i<(3*(P-1)); i++) {
+       j = arc4random_uniform(size-2);
+       printf("data[%d] = %.04f\n", j, data[j]);
+       samp[i]=data[j];
+    }
+    qsort(samp, (3*(P-1)), sizeof(float), compare);
+    /*for(int i=0; i<(3*(P-1)); i++) {
+        printf("%.04f\n", samp[i]);
+    }*/
+    //printf("find medians\n");
+    floats* xs = make_floats(P+1);
+    xs->data[0]=0;
+    for(int i=0; i<(3*(P-1)); i+=3) {
+    	xs->data[(i/3)+1]=((samp[i]+samp[i+1]+samp[i+2])/3);
+        printf("%.04f\n", ((samp[i]+samp[i+1]+samp[i+2])/3));
+    }
+    xs->data[P]=FLT_MAX;
+    return xs;
 }
 
 void*
