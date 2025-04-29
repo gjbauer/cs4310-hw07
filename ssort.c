@@ -31,7 +31,8 @@ floats*
 sample(float* data, long size, int P)
 {
     // TODO: sample the input data, per the algorithm decription
-    //int samp[size];
+    float samp[(3*(P-1))];
+    data = data + 2;
     /*
      * Randomly select 3*(P-1) items from the array.
      * Sort those items.
@@ -40,9 +41,13 @@ sample(float* data, long size, int P)
      */
      int j;
      for(int i=0; i<(3*(P-1)); i++) {
-        j = arc4random_uniform(size);
-     	printf("%d\n", j);
-     	printf("%.04f\n", data[j]);
+        j = arc4random_uniform(size-2);
+     	printf("data[%d] = %.04f\n", j, data[j]);
+     	samp[i]=data[j];
+     }
+     qsort(samp, (3*(P-1)), sizeof(float), compare);
+     for(int i=0; i<(3*(P-1)); i++) {
+     	printf("%.04f\n", samp[i]);
      }
     return NULL;
 }
