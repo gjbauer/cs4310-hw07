@@ -26,15 +26,12 @@ int compare(const void *a, const void *b) {
 void
 qsort_floats(floats* xs)
 {
-    // TODO: call qsort to sort the array
-    // see "man 3 qsort" for details
     qsort(xs->data, xs->size, sizeof(float), compare);
 }
 
 floats*
 sample(float* data, long size, int P)
 {
-    // TODO: sample the input data, per the algorithm decription
     float samp[(3*(P-1))];
     data = data + 2;	// Move our pointer, because it appears to be off...
     /*
@@ -84,14 +81,10 @@ sort_worker(void* arg)
     }
 
     printf("%d: start %.04f, count %ld\n", sa->pnum, sa->samps->data[sa->pnum], xs->size);
-
-    // TODO: some other stuff
     
     // Each process uses quicksort to sort the local array.
 
     qsort_floats(xs);
-
-    // TODO: probably more stuff
     
     /* Each process calculates where to put its result array as follows:
      *     start = sum(sizes[0 to p - 1]) # that’s sum(zero items) = 0 for p = 0
@@ -114,8 +107,6 @@ run_sort_workers(float* data, long size, int P, floats* samps, long* sizes, barr
 {
     pthread_t kids[P];
     (void) kids; // suppress unused warning
-
-    // TODO: spawn P processes, each running sort_worker
     
     /* Spawn P processes, numbered p in (0 to P-1).
      * Each process builds a local array of items to be sorted by scanning the full input and taking items between samples[p] and samples[p+1].
