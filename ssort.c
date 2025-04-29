@@ -38,7 +38,7 @@ sample(float* data, long size, int P)
      * Take the median of each group of three in the sorted array, producing an array (samples) of (P-1) items.
      * Add 0 at the start and +inf at the end (or the min and max values of the type being sorted) of the samples array so it has (P+1) items numbered (0 to P).
      */
-     // rand() % (size + 1);
+     // arc4random_uniform(size + 1);
     return xs;
 }
 
