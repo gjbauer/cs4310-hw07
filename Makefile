@@ -5,7 +5,10 @@ SRCS   := $(wildcard *.c)
 all: tools ssort
 
 ssort: $(SRCS)
-	gcc $(CFLAGS) -o ssort $(SRCS) -lm -lpthread
+	gcc $(CFLAGS) -o ssort barrier.c utils.c ssort.c float_vec.c -lm -lpthread
+
+ssort.1: $(SRCS)
+	gcc $(CFLAGS) -o ssort.1 barrier.c utils.c ssort.1.c float_vec.c -lm -lpthread
 
 tools:
 	(cd tools && make)
