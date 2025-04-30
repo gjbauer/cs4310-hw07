@@ -80,7 +80,7 @@ sort_worker(void* arg)
     	}
     }
 
-    printf("%d: start %.04f, count %ld\n", sa->pnum, sa->samps->data[sa->pnum], xs->size);
+    printf("%d: start %.04f, count %ld\n", sa->pnum, sa->samps->data[sa->pnum], sa->size-2);
     
     // Each process uses quicksort to sort the local array.
 
